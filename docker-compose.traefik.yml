@@ -1,0 +1,38 @@
+---
+x-logging:
+  &default-logging
+  driver: "json-file"
+  options:
+    max-size: "1m"
+    max-file: "1"
+    tag: "{{.Name}}"
+
+x-common-labels: &default-labels
+  logging: "promtail"
+  logging_jobname: "containerlogs"
+  stackname: ${MONITORING_STACK}
+
+services:
+  vscode:
+    ports: !reset []
+    expose:
+      - 8443
+    networks:
+      - traefik
+    labels:
+      <<: *default-labels
+      # Enable Traefik for this service
+      traefik.enable: true
+      # Configure router
+      traefik.http.routers.vscode.rule: Host(`${VSCODE_HOST:?set VSCODE_HOST to the vscode hostname}`)
+      traefik.http.routers.vscode.tls: true
+      traefik.http.routers.vscode.tls.certresolver: letsencrypt
+      # Configure service
+      traefik.http.services.vscode.loadbalancer.server.port: "8443"
+    logging: *default-logging
+
+networks:
+  traefik:
+    name: ${NETWORK:-traefik}
+    external: true
+

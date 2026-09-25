@@ -1,0 +1,39 @@
+---
+# Paths are relative to the project directory - on TrueNAS (deployed via an
+# include: block) that's the app's dataset, e.g. /mnt/<pool>/Apps/vscode, so
+# ../<app> mounts sibling app datasets into the workspace.
+services:
+  vscode:
+    image: lscr.io/linuxserver/code-server:${VSCODE_VER:-latest}
+    container_name: vscode
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Australia/Brisbane}
+      #- PASSWORD=password #optional
+      #- HASHED_PASSWORD= #optional
+      #- SUDO_PASSWORD=password #optional
+      #- SUDO_PASSWORD_HASH= #optional
+      - PROXY_DOMAIN=${VSCODE_HOST:-vscode.my.domain} #optional
+      - DEFAULT_WORKSPACE=/config/workspace #optional
+      - PWA_APPNAME=vscode #optional
+    volumes:
+      - ./config:/config
+      - ./.env:/config/workspace/vscode/.env
+      - ./docker-compose.yml:/config/workspace/vscode/docker-compose.yml
+      - ./docker-compose.traefik.yml:/config/workspace/vscode/docker-compose.traefik.yml
+      # Additional apps
+      - ../dns-stack:/config/workspace/dns-stack
+      - ../traefik-portainer:/config/workspace/traefik-portainer
+    ports:
+      - 8443:8443
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5' # Limits the service to 50% of one CPU core
+          memory: 2048M # Sets a memory limit of 2Gb
+        reservations:
+          cpus: '0.25' # Guarantees 25% of one CPU core
+          memory: 1024M # Reserves 1Gb of memory
+
