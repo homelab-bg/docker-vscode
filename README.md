@@ -37,9 +37,22 @@ include:
   - path:
       - /mnt/<pool>/Apps/vscode/docker-compose.yml
       - /mnt/<pool>/Apps/vscode/docker-compose.traefik.yml
+
+# Web Portal button in the TrueNAS Apps UI. This goes here, not in the compose
+# files, because `include:` drops top-level x- extensions from included files.
+# Use a literal hostname: .env isn't applied to this file.
+x-portals:
+  - {name: VS Code, scheme: https, host: vscode.yourdomain.com, port: 443, path: /}
 ```
 
 The dataset is the project directory, so `.env`, `./config` and the `../<app>` workspace mounts all resolve under `/mnt/<pool>/Apps/`.
+
+Set `PUID`/`PGID` in `.env` to the user that owns the app datasets, so files edited in vscode keep their ownership. The defaults are 1000/1000, but on TrueNAS that's usually `truenas_admin`:
+```bash
+PUID=950
+PGID=950
+```
+To check the IDs on your system, run `id truenas_admin` or `ls -ln /mnt/<pool>/Apps`.
 
 ## Prerequisites
 
